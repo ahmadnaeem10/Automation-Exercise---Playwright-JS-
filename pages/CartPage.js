@@ -181,4 +181,32 @@ export class CartPage {
         
         return names;
     }
+
+    /**
+     * Verifies that a product is displayed in the cart page
+     */
+    async verifyProductInCart() {
+        try {
+            // Wait for cart page to load
+            await this.page.waitForLoadState('networkidle');
+            
+            // Check if there are any products in the cart
+            const productCount = await this.cartItems.count();
+            console.log(`Found ${productCount} products in cart`);
+            
+            // Verify that at least one product is in the cart
+            expect(productCount).toBeGreaterThan(0);
+            
+            // Get the name of the first product in the cart for logging
+            if (productCount > 0) {
+                const productName = await this.page.locator('.cart_description h4 a').first().textContent();
+                console.log(`Product in cart: ${productName}`);
+            }
+            
+            return true;
+        } catch (error) {
+            console.log('Error verifying product in cart:', error.message);
+            throw error;
+        }
+    }
 }
