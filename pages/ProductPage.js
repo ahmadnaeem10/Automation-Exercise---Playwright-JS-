@@ -113,9 +113,6 @@ export class ProductPage {
             // Wait for the modal to be visible
             await this.page.waitForSelector('.modal-footer button', { state: 'visible', timeout: 10000 });
             
-            // Screenshot before clicking for debugging
-            await this.page.screenshot({ path: 'before-continue-shopping.png' });
-            
             // Make sure button is visible before clicking
             await this.continueShoppingButton.waitFor({ state: 'visible', timeout: 5000 });
             
@@ -271,9 +268,119 @@ export class ProductPage {
         
         console.log(`Found ${count} items in cart`);
         
-        // Take screenshot of cart page for debugging
-        await this.page.screenshot({ path: 'cart-contents.png' });
-        
         return count > 0;
+    }
+
+    /**
+     * Gets all search result products
+     * @returns {Promise<Array>} Array of product elements
+     */
+    async getSearchResults() {
+        // Wait for the search results to be visible
+        await this.searchedProductItems.first().waitFor({ state: 'visible', timeout: 10000 });
+        
+        // Get the count of search result items
+        const count = await this.searchedProductItems.count();
+        
+        // Create an array of search result items
+        const results = [];
+        for (let i = 0; i < count; i++) {
+            results.push(this.searchedProductItems.nth(i));
+        }
+        
+        return results;
+    }
+
+    /**
+     * Gets the names of all search result products
+     * @returns {Promise<Array<string>>} Array of product names
+     */
+    async getSearchResultNames() {
+        const products = await this.getSearchResults();
+        const names = [];
+        
+        for (const product of products) {
+            const nameElement = await product.locator('.productinfo p');
+            if (await nameElement.isVisible()) {
+                const name = await nameElement.textContent();
+                names.push(name.trim());
+            }
+        }
+        
+        return names;
+    }
+
+    /**
+     * Adds all search results to cart
+     */
+    async addSearchResultsToCart() {
+        const products = await this.getSearchResults();
+        
+        for (let i = 0; i < products.length; i++) {
+            try {
+                // Hover over the product to show the "Add to cart" button
+                await products[i].hover();
+                
+                // Small wait for overlay to appear
+                await this.page.waitForTimeout(500);
+                
+                // Click the "Add to cart" button within the overlay
+                const addButton = products[i].locator('.product-overlay .add-to-cart');
+                await addButton.click({ force: true });
+                
+                // Wait for the modal to appear
+                await this.page.waitForSelector('.modal-content', { 
+                    state: 'visible', 
+                    timeout: 5000 
+                });
+                
+                // Click "Continue Shopping"
+                await this.clickContinueShopping();
+                
+                // Wait a bit before trying the next product
+                await this.page.waitForTimeout(1000);
+            } catch (error) {
+                console.log(`Error adding product ${i+1} to cart: ${error.message}`);
+                // Continue with the next product even if this one fails
+                continue;
+            }
+        }
+    }
+
+    /**
+     * Adds a limited number of search results to cart
+     * @param {number} limit Maximum number of products to add
+     */
+    async addLimitedSearchResultsToCart(limit = 2) {
+        const products = await this.getSearchResults();
+        const maxProducts = Math.min(products.length, limit);
+        
+        for (let i = 0; i < maxProducts; i++) {
+            try {
+                // Hover over the product to show the "Add to cart" button
+                await products[i].hover();
+                
+                // Small wait for overlay to appear
+                await this.page.waitForTimeout(300);
+                
+                // Click the "Add to cart" button within the overlay
+                const addButton = products[i].locator('.product-overlay .add-to-cart');
+                await addButton.click({ force: true });
+                
+                // Wait for the modal to appear with reduced timeout
+                await this.page.waitForSelector('.modal-content', { 
+                    state: 'visible', 
+                    timeout: 3000 
+                });
+                
+                // Click "Continue Shopping"
+                await this.clickContinueShopping();
+                
+                console.log(`Successfully added product ${i+1} to cart`);
+            } catch (error) {
+                console.log(`Error adding product ${i+1} to cart: ${error.message}`);
+                // Continue with the next product even if this one fails
+            }
+        }
     }
 }

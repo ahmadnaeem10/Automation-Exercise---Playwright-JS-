@@ -66,62 +66,47 @@ export class CartPage {
         }
     }
 
+    async verifyProductQuantity(expectedQuantity) {
+        try {
+            // Convert the expected quantity to string for comparison
+            const expectedQuantityStr = expectedQuantity.toString();
+            
+            // Locate the quantity column in the cart
+            const quantityElement = this.page.locator('tr.cart_menu td:nth-child(4)');
+            await expect(quantityElement).toHaveText('Quantity', { timeout: 10000 });
+            
+            // Find the actual quantity value of the product
+            const actualQuantity = await this.page.locator('tr:has(.cart_description) .cart_quantity').textContent();
+            
+            console.log(`Expected quantity: ${expectedQuantityStr}, Actual quantity: ${actualQuantity.trim()}`);
+            
+            // Check if the quantities match
+            return actualQuantity.trim() === expectedQuantityStr;
+        } catch (error) {
+            console.log('Error verifying product quantity:', error.message);
+            return false;
+        }
+    }
+    
     async verifyProductQuantityInCart(expectedQuantity) {
         try {
-            // Wait for cart page to fully load first
-            await this.page.waitForLoadState('networkidle', { timeout: 30000 });
+            // Convert the expected quantity to string for comparison
+            const expectedQuantityStr = expectedQuantity.toString();
             
-            // Wait for cart items to be visible
-            await this.page.waitForSelector('.cart_info', { state: 'visible', timeout: 15000 });
+            // Locate the quantity column in the cart
+            const quantityElement = this.page.locator('tr.cart_menu td:nth-child(4)');
+            await expect(quantityElement).toHaveText('Quantity', { timeout: 10000 });
             
-            // Take a screenshot for debugging
-            await this.page.screenshot({ path: 'cart-quantity-verification.png' });
+            // Find the actual quantity value of the product
+            const actualQuantity = await this.page.locator('tr:has(.cart_description) .cart_quantity button').first().textContent();
             
-            // Get the quantity element with retry logic
-            let attempts = 0;
-            let quantity;
+            console.log(`Expected quantity: ${expectedQuantityStr}, Actual quantity: ${actualQuantity.trim()}`);
             
-            while (attempts < 3) {
-                try {
-                    // Get the quantity text in different possible ways
-                    quantity = await this.quantities.first().textContent();
-                    break; // If we got here, we succeeded
-                } catch (error) {
-                    attempts++;
-                    console.log(`Attempt ${attempts} to get quantity failed: ${error.message}`);
-                    
-                    if (attempts === 3) {
-                        // Last attempt - try JavaScript approach
-                        quantity = await this.page.evaluate(() => {
-                            const qtyElement = document.querySelector('.cart_quantity button');
-                            return qtyElement ? qtyElement.textContent.trim() : '1'; // Default to 1 if not found
-                        });
-                    } else {
-                        // Wait a bit before retrying
-                        await this.page.waitForTimeout(1000);
-                    }
-                }
-            }
-            
-            // Verify the quantity matches the expected value
-            console.log(`Quantity in cart: ${quantity}, Expected: ${expectedQuantity}`);
-            
-            // Handle both string and number comparisons
-            const quantityMatches = quantity.toString() === expectedQuantity.toString();
-            
-            if (!quantityMatches) {
-                console.warn(`Quantity mismatch! Found: ${quantity}, Expected: ${expectedQuantity}`);
-            } else {
-                console.log(`Verified product quantity in cart: ${quantity}`);
-            }
-            
-            // If this is an assertion, we should use expect
-            await expect.soft(quantity).toBe(expectedQuantity.toString());
-            
-            return quantityMatches;
+            // Assert that the quantities match
+            await expect(actualQuantity.trim()).toBe(expectedQuantityStr);
         } catch (error) {
-            console.error('Error verifying product quantity:', error.message);
-            return false;
+            console.log('Error verifying product quantity:', error.message);
+            throw error; // Re-throw to fail the test
         }
     }
     
@@ -154,5 +139,46 @@ export class CartPage {
             // Verify the product at the specified index is no longer the same
             console.log("Product has been removed, but cart still has items");
         }
+    }
+    
+    /**
+     * Gets the names of all products in the cart
+     * @returns {Promise<Array<string>>} Array of product names in cart
+     */
+    async getProductNamesInCart() {
+        // Wait for cart page to fully load
+        await this.page.waitForLoadState('networkidle', { timeout: 15000 });
+        
+        // Wait for cart items to be visible if any exist
+        await this.page.waitForSelector('.cart_info', { 
+            state: 'visible', 
+            timeout: 10000 
+        }).catch(() => console.log('Cart table not found, may be empty'));
+        
+        // Get cart items count
+        const itemCount = await this.cartItems.count();
+        console.log(`Found ${itemCount} items in cart`);
+        
+        // If no items, return empty array
+        if (itemCount === 0) {
+            return [];
+        }
+        
+        // Get product names
+        const names = [];
+        for (let i = 0; i < itemCount; i++) {
+            try {
+                // Get the name from the product description column
+                const nameElement = this.cartItems.nth(i).locator('.cart_description h4 a');
+                if (await nameElement.isVisible()) {
+                    const name = await nameElement.textContent();
+                    names.push(name.trim());
+                }
+            } catch (error) {
+                console.log(`Could not get name for product ${i+1}: ${error.message}`);
+            }
+        }
+        
+        return names;
     }
 }

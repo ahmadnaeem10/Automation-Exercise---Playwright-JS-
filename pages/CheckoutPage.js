@@ -99,9 +99,6 @@ export class CheckoutPage {
             console.log('Page load timeout, continuing anyway');
         });
         
-        // Take a screenshot for debugging
-        await this.page.screenshot({ path: 'checkout-page.png' });
-        
         // Try multiple selectors to find address details
         try {
             const possibleAddressSelectors = [
@@ -183,13 +180,6 @@ export class CheckoutPage {
     }
 
     async clickPayAndConfirmOrder() {
-        // Take a screenshot before clicking the pay button for debugging
-        try {
-            await this.page.screenshot({ path: 'before-payment.png' });
-        } catch (error) {
-            console.log('Could not take before-payment screenshot:', error.message);
-        }
-        
         // Click the pay button with a shorter timeout
         await this.payAndConfirmButton.click({ timeout: 10000 });
         
@@ -202,13 +192,6 @@ export class CheckoutPage {
     }
 
     async verifyOrderPlacedSuccessfully() {
-        // Take a screenshot immediately after payment for debugging
-        try {
-            await this.page.screenshot({ path: 'after-payment.png' });
-        } catch (error) {
-            console.log('Could not take after-payment screenshot:', error.message);
-        }
-        
         try {
             // Increase timeout and check for either possible success message
             const possibleMessages = [
