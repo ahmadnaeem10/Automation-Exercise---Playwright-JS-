@@ -39,6 +39,15 @@ export class ProductPage {
         this.productQuantityInput = page.locator('#quantity');
         this.addToCartButtonDetail = page.locator('button.cart');
         this.viewProductButtons = page.locator('.choose a');
+        
+        // Review elements
+        this.writeYourReviewHeading = page.locator('a', { hasText: 'Write Your Review' });
+        this.reviewNameInput = page.locator('#name');
+        this.reviewEmailInput = page.locator('#email');
+        this.reviewTextarea = page.locator('#review');
+        this.reviewSubmitButton = page.locator('#button-review');
+        // Updated selector for success message - using both class and text content
+        this.reviewSuccessMessage = page.locator('.alert-success', { hasText: 'Thank you for your review' });
     }
 
     async clickProductsButton() {
@@ -381,6 +390,182 @@ export class ProductPage {
                 console.log(`Error adding product ${i+1} to cart: ${error.message}`);
                 // Continue with the next product even if this one fails
             }
+        }
+    }
+
+    /**
+     * Verifies that the "Write Your Review" section is visible
+     */
+    async verifyWriteYourReviewVisible() {
+        try {
+            // Wait for the review section to be visible
+            await this.writeYourReviewHeading.waitFor({ state: 'visible', timeout: 10000 });
+            await expect(this.writeYourReviewHeading).toBeVisible();
+            
+            // Scroll to the review section to ensure it's in view
+            await this.writeYourReviewHeading.scrollIntoViewIfNeeded();
+            
+            // Verify review form elements are present
+            await expect(this.reviewNameInput).toBeVisible();
+            await expect(this.reviewEmailInput).toBeVisible();
+            await expect(this.reviewTextarea).toBeVisible();
+            await expect(this.reviewSubmitButton).toBeVisible();
+            
+            console.log('Write Your Review section is visible');
+            return true;
+        } catch (error) {
+            console.log('Error verifying Write Your Review section:', error.message);
+            throw error;
+        }
+    }
+    
+    /**
+     * Enters review details
+     * @param {Object} details - The review details
+     * @param {string} details.name - The reviewer's name
+     * @param {string} details.email - The reviewer's email
+     * @param {string} details.review - The review text
+     */
+    async enterReviewDetails({ name, email, review }) {
+        try {
+            // Make sure review form is visible
+            await this.writeYourReviewHeading.scrollIntoViewIfNeeded();
+            
+            // Fill in the form fields
+            await this.reviewNameInput.fill(name);
+            await this.reviewEmailInput.fill(email);
+            await this.reviewTextarea.fill(review);
+            
+            console.log('Entered review details successfully');
+        } catch (error) {
+            console.log('Error entering review details:', error.message);
+            throw error;
+        }
+    }
+    
+    /**
+     * Submits the review form
+     */
+    async submitReview() {
+        try {
+            // Make sure submit button is visible
+            await this.reviewSubmitButton.scrollIntoViewIfNeeded();
+            await expect(this.reviewSubmitButton).toBeEnabled();
+            
+            // Click the submit button
+            await this.reviewSubmitButton.click();
+            
+            // Wait for submission to complete
+            await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+            
+            console.log('Review submitted successfully');
+        } catch (error) {
+            console.log('Error submitting review:', error.message);
+            throw error;
+        }
+    }
+    
+    /**
+     * Verifies that the review success message is displayed
+     * Handles the case where the message appears briefly and then disappears
+     */
+    async verifyReviewSuccessMessage() {
+        try {
+            console.log('Attempting to catch the transient success message...');
+            
+            // Click submit and immediately start watching for the message
+            // Set up an observer to catch the fleeting message
+            const messageFound = await this.page.evaluate(() => {
+                return new Promise(resolve => {
+                    // Flag to track if we've seen the message
+                    let messageDetected = false;
+                    
+                    // Create mutation observer to watch for DOM changes
+                    const observer = new MutationObserver((mutations) => {
+                        // Check if our success message appears in any mutation
+                        for (const mutation of mutations) {
+                            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                                // Look for success message in added nodes
+                                for (const node of mutation.addedNodes) {
+                                    if (node.nodeType === Node.ELEMENT_NODE) {
+                                        // Check if this is our success message or contains it
+                                        if (node.classList?.contains('alert-success') || 
+                                            node.querySelector?.('.alert-success')) {
+                                            
+                                            const element = node.classList?.contains('alert-success') ? 
+                                                node : node.querySelector('.alert-success');
+                                                
+                                            if (element && element.textContent.includes('Thank you for your review')) {
+                                                messageDetected = true;
+                                                console.log('Success message detected in DOM!');
+                                                // We found it, so we can resolve and stop observing
+                                                observer.disconnect();
+                                                resolve(true);
+                                                return;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Start observing the document with the configured parameters
+                    observer.observe(document.body, { 
+                        childList: true, 
+                        subtree: true,
+                        attributes: true,
+                        characterData: true
+                    });
+                    
+                    // Also check if it's already in the DOM
+                    const existingMessage = document.querySelector('.alert-success');
+                    if (existingMessage && existingMessage.textContent.includes('Thank you for your review')) {
+                        messageDetected = true;
+                        observer.disconnect();
+                        resolve(true);
+                        return;
+                    }
+                    
+                    // Set a timeout to resolve after a few seconds if we haven't seen the message
+                    // This prevents the test from hanging indefinitely
+                    setTimeout(() => {
+                        observer.disconnect();
+                        resolve(messageDetected);
+                    }, 5000);
+                });
+            });
+            
+            if (messageFound) {
+                console.log('Success message was detected during the verification process');
+                return true;
+            }
+            
+            // If the message wasn't detected by the observer, try one final direct check
+            const successElement = await this.page.locator('.alert-success').isVisible();
+            if (successElement) {
+                const successText = await this.page.locator('.alert-success').textContent();
+                console.log('Found success message text in final check:', successText);
+                if (successText.includes('Thank you for your review')) {
+                    return true;
+                }
+            }
+            
+            // If we reach here, we need to fail the test
+            throw new Error('Review success message not detected');
+            
+        } catch (error) {
+            console.log('Error verifying review success message:', error.message);
+            
+            // One last chance - take a screenshot to see what's happening
+            try {
+                await this.page.screenshot({ path: 'review-message-debug.png' });
+                console.log('Saved debug screenshot to review-message-debug.png');
+            } catch (screenshotError) {
+                console.log('Failed to save debug screenshot:', screenshotError.message);
+            }
+            
+            throw error;
         }
     }
 }
