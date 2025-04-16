@@ -15,8 +15,8 @@ module.exports = defineConfig({
   testDir: './tests',
   /* Maximum time one test can run for. */
   timeout: 90000,
-  /* Run tests sequentially to avoid resource contention */
-  workers: 1,
+  /* Run tests in parallel with maximum number of workers */
+  workers: process.env.CI ? 1 : undefined, // Use 1 in CI environments, otherwise use default (CPU/2)
   /* Retry failed tests to verify if they're truly flaky */
   retries: 1,
   /* Reporter to use. */
