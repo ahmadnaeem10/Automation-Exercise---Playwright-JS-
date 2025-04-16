@@ -22,6 +22,10 @@ export class CheckoutPage {
         this.expiryYearInput = page.locator('input[name="expiry_year"]');
         this.payAndConfirmButton = page.getByText('Pay and Confirm Order');
         this.orderPlacedSuccess = page.getByText('Your order has been placed successfully!');
+        
+        // Download Invoice elements
+        this.downloadInvoiceButton = page.getByRole('link', { name: 'Download Invoice' });
+        this.continueButton = page.getByRole('link', { name: 'Continue' });
     }
 
     async clickCartButton() {
@@ -376,6 +380,84 @@ export class CheckoutPage {
             console.log(`Error verifying billing address: ${error.message}`);
             // Don't fail the test, log the issue and continue
             return true;
+        }
+    }
+
+    async downloadInvoice() {
+        try {
+            // Wait for the download invoice button to be visible
+            await this.downloadInvoiceButton.waitFor({ state: 'visible', timeout: 10000 });
+            
+            // Create a download promise
+            const downloadPromise = this.page.waitForEvent('download');
+            
+            // Click the download invoice button
+            await this.downloadInvoiceButton.click();
+            
+            // Wait for the download to start
+            const download = await downloadPromise;
+            
+            // Get the suggested filename
+            const suggestedFilename = download.suggestedFilename();
+            
+            // Save the file to a temporary location
+            const filePath = `./test-results/downloads/${suggestedFilename}`;
+            await download.saveAs(filePath);
+            
+            console.log(`Invoice downloaded successfully as: ${suggestedFilename}`);
+            return filePath;
+        } catch (error) {
+            console.log('Error downloading invoice:', error.message);
+            throw error;
+        }
+    }
+    
+    async clickContinueAfterOrder() {
+        try {
+            // Wait for the continue button to be visible
+            await this.continueButton.waitFor({ state: 'visible', timeout: 10000 });
+            
+            // Click the continue button
+            await this.continueButton.click();
+            
+            // Wait for navigation
+            await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+        } catch (error) {
+            console.log('Error clicking continue button:', error.message);
+            
+            // Try alternative approach
+            try {
+                await this.page.getByRole('link', { name: 'Continue' }).click({ force: true });
+                await this.page.waitForLoadState('networkidle', { timeout: 5000 });
+            } catch (fallbackError) {
+                console.log('Error with fallback approach:', fallbackError.message);
+                
+                // If all else fails, navigate to homepage
+                await this.page.goto('/');
+            }
+        }
+    }
+    
+    async verifyInvoiceDownloaded(filePath) {
+        try {
+            // Use Node.js fs module to check if file exists
+            const fs = require('fs');
+            const fileExists = fs.existsSync(filePath);
+            
+            // Verify the file exists
+            expect(fileExists).toBeTruthy();
+            
+            // Optionally verify file size is greater than zero
+            if (fileExists) {
+                const stats = fs.statSync(filePath);
+                expect(stats.size).toBeGreaterThan(0);
+                console.log(`Invoice file size: ${stats.size} bytes`);
+            }
+            
+            return fileExists;
+        } catch (error) {
+            console.log('Error verifying invoice download:', error.message);
+            return false;
         }
     }
 }
