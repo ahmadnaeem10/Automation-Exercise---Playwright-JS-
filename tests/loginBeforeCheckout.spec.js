@@ -22,7 +22,7 @@ test('Test Case 16: Place Order: Login before Checkout', async ({ page }) => {
     const password = 'password123';
 
     // First register a new user to ensure we have valid login credentials
-    await page.goto('/', { waitUntil: 'networkidle', timeout: 45000 });
+    await page.goto('/', { waitUntil: 'networkidle' });
     await homePage.verifyHomePage();
     await homePage.clickSignupLogin();
     
@@ -62,7 +62,7 @@ test('Test Case 16: Place Order: Login before Checkout', async ({ page }) => {
 
     // Now begin the actual test case 16
     // Step 1 & 2: Launch browser and navigate to url
-    await page.goto('/', { waitUntil: 'networkidle', timeout: 45000 });
+    await page.goto('/', { waitUntil: 'networkidle' });
     
     // Step 3: Verify that home page is visible successfully
     await homePage.verifyHomePage();
@@ -86,11 +86,11 @@ test('Test Case 16: Place Order: Login before Checkout', async ({ page }) => {
     } catch (error) {
         console.log('Error adding products to cart normally, trying alternative approach:', error.message);
         // Try direct approach for adding products
-        await page.goto('/product_details/1', { waitUntil: 'networkidle', timeout: 30000 });
+        await page.goto('/product_details/1', { waitUntil: 'networkidle' });
         await page.locator('button.cart').click();
         await page.waitForSelector('.modal-content', { state: 'visible' });
         await page.locator('.modal-footer button').click();
-        await page.goto('/product_details/2', { waitUntil: 'networkidle', timeout: 30000 });
+        await page.goto('/product_details/2', { waitUntil: 'networkidle' });
         await page.locator('button.cart').click();
     }
     
@@ -99,7 +99,7 @@ test('Test Case 16: Place Order: Login before Checkout', async ({ page }) => {
         await checkoutPage.clickCartButton();
     } catch (error) {
         console.log('Error clicking cart button, navigating directly');
-        await page.goto('/view_cart', { waitUntil: 'networkidle', timeout: 30000 });
+        await page.goto('/view_cart', { waitUntil: 'networkidle' });
     }
     
     // Step 9: Verify that cart page is displayed

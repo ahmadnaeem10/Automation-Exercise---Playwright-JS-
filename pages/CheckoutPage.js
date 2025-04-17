@@ -65,11 +65,11 @@ export class CheckoutPage {
             }
             
             // Now try to click proceed to checkout
-            await this.proceedToCheckoutButton.waitFor({ state: 'visible', timeout: 10000 });
-            await this.proceedToCheckoutButton.click({ force: true, timeout: 10000 });
+            await this.proceedToCheckoutButton.waitFor({ state: 'visible' });
+            await this.proceedToCheckoutButton.click({ force: true });
             
             // Wait for navigation or page load
-            await this.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+            await this.page.waitForLoadState('networkidle').catch(() => {
                 console.log('Navigation timeout after clicking Proceed To Checkout, continuing anyway');
             });
         } catch (error) {
@@ -79,13 +79,13 @@ export class CheckoutPage {
 
     async clickRegisterLogin() {
         try {
-            // Wait for the button to be visible with increased timeout
-            await this.registerLoginLink.waitFor({ state: 'visible', timeout: 10000 });
+            // Wait for the button to be visible
+            await this.registerLoginLink.waitFor({ state: 'visible' });
             
             // Try clicking with force option to bypass any overlay issues
             await Promise.race([
-                this.registerLoginLink.click({ force: true, timeout: 10000 }),
-                this.page.waitForTimeout(2000).then(() => {
+                this.registerLoginLink.click({ force: true }),
+                this.page.waitForLoadState('domcontentloaded').then(() => {
                     console.log('Trying alternative approach for clicking Register/Login link');
                     return this.page.click('text=Register / Login', { force: true });
                 })
@@ -98,8 +98,8 @@ export class CheckoutPage {
     }
 
     async verifyAddressAndOrderDetails() {
-        // Wait longer for page to load
-        await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {
+        // Wait for page to load
+        await this.page.waitForLoadState('networkidle').catch(() => {
             console.log('Page load timeout, continuing anyway');
         });
         
@@ -184,12 +184,12 @@ export class CheckoutPage {
     }
 
     async clickPayAndConfirmOrder() {
-        // Click the pay button with a shorter timeout
-        await this.payAndConfirmButton.click({ timeout: 10000 });
+        // Click the pay button
+        await this.payAndConfirmButton.click();
         
         // Use a shorter timeout and catch any errors to prevent test failure
         try {
-            await this.page.waitForLoadState('networkidle', { timeout: 5000 });
+            await this.page.waitForLoadState('networkidle');
         } catch (error) {
             console.log('Navigation timeout after payment, continuing anyway');
         }
@@ -197,7 +197,7 @@ export class CheckoutPage {
 
     async verifyOrderPlacedSuccessfully() {
         try {
-            // Increase timeout and check for either possible success message
+            // Check for either possible success message
             const possibleMessages = [
                 'Your order has been placed successfully!',
                 'Congratulations! Your order has been confirmed!',
@@ -206,11 +206,11 @@ export class CheckoutPage {
                 'Order placed successfully'
             ];
             
-            // Try each possible message with a longer timeout
+            // Try each possible message
             for (const message of possibleMessages) {
                 const successMessage = this.page.getByText(message, { exact: false });
                 try {
-                    await expect(successMessage).toBeVisible({ timeout: 10000 });
+                    await expect(successMessage).toBeVisible();
                     console.log(`Found success message: "${message}"`);
                     // If we found a match, we can return
                     return;
@@ -250,7 +250,7 @@ export class CheckoutPage {
 
     async verifyDeliveryAddress(addressDetails) {
         // Wait for the address section to be visible
-        await this.page.waitForLoadState('networkidle', { timeout: 15000 });
+        await this.page.waitForLoadState('networkidle');
         
         try {
             console.log('Attempting to verify delivery address...');
@@ -340,7 +340,7 @@ export class CheckoutPage {
 
     async verifyBillingAddress(addressDetails) {
         // Wait for the address section to be visible
-        await this.page.waitForLoadState('networkidle', { timeout: 15000 });
+        await this.page.waitForLoadState('networkidle');
         
         try {
             console.log('Attempting to verify billing address...');
@@ -386,7 +386,7 @@ export class CheckoutPage {
     async downloadInvoice() {
         try {
             // Wait for the download invoice button to be visible
-            await this.downloadInvoiceButton.waitFor({ state: 'visible', timeout: 10000 });
+            await this.downloadInvoiceButton.waitFor({ state: 'visible' });
             
             // Create a download promise
             const downloadPromise = this.page.waitForEvent('download');
@@ -415,20 +415,20 @@ export class CheckoutPage {
     async clickContinueAfterOrder() {
         try {
             // Wait for the continue button to be visible
-            await this.continueButton.waitFor({ state: 'visible', timeout: 10000 });
+            await this.continueButton.waitFor({ state: 'visible' });
             
             // Click the continue button
             await this.continueButton.click();
             
             // Wait for navigation
-            await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+            await this.page.waitForLoadState('networkidle');
         } catch (error) {
             console.log('Error clicking continue button:', error.message);
             
             // Try alternative approach
             try {
                 await this.page.getByRole('link', { name: 'Continue' }).click({ force: true });
-                await this.page.waitForLoadState('networkidle', { timeout: 5000 });
+                await this.page.waitForLoadState('networkidle');
             } catch (fallbackError) {
                 console.log('Error with fallback approach:', fallbackError.message);
                 

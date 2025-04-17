@@ -7,7 +7,7 @@ test('Test Case 21: Add review on product', async ({ page }) => {
     const productPage = new ProductPage(page);
     
     // Step 1 & 2: Launch browser and navigate to url
-    await page.goto('/', { waitUntil: 'networkidle', timeout: 45000 });
+    await page.goto('/', { waitUntil: 'networkidle' });
     
     // Step 3: Verify home page is visible
     await homePage.verifyHomePage();
@@ -27,8 +27,8 @@ test('Test Case 21: Add review on product', async ({ page }) => {
     // Step 8: Enter name, email and review
     await productPage.enterReviewDetails({
         name: 'Test User',
-        email: 'testuser@example.com',
-        review: 'This is a great product. Very satisfied with the quality and price.'
+        email: 'test@example.com',
+        review: 'This is a test review. The product looks good and has excellent quality.'
     });
     
     // Step 9: Click 'Submit' button

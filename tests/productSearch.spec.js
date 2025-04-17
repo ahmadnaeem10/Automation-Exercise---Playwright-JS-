@@ -2,8 +2,6 @@ import { test, expect } from '@playwright/test';
 import { ProductPage } from '../pages/ProductPage';
 import env from '../utils/env';
 
-test.setTimeout(60000);
-
 test('Test Case 9: Search Product', async ({ page }) => {
     const productPage = new ProductPage(page);
 

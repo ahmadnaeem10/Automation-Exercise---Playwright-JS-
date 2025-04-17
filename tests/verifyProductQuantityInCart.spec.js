@@ -8,7 +8,7 @@ test('Test Case 13: Verify Product quantity in Cart', async ({ page }) => {
     const cartPage = new CartPage(page);
     
     // Step 1 & 2: Launch browser and navigate to the website
-    await page.goto('/', { waitUntil: 'networkidle', timeout: 45000 });
+    await page.goto('/', { waitUntil: 'networkidle' });
     
     // Step 3: Verify home page is visible
     await expect(page.getByRole('link', { name: 'Home' })).toBeVisible();
@@ -18,7 +18,7 @@ test('Test Case 13: Verify Product quantity in Cart', async ({ page }) => {
         await productPage.clickViewProductOnHomePage();
     } catch (error) {
         console.log('Error clicking view product, trying direct URL approach');
-        await page.goto('/product_details/1', { waitUntil: 'networkidle', timeout: 45000 });
+        await page.goto('/product_details/1', { waitUntil: 'networkidle' });
     }
     
     // Step 5: Verify product detail is opened

@@ -22,7 +22,7 @@ export class HomePage {
     async verifyLoggedIn(username) {
         try {
             // First try with the exact username
-            const exactMatch = await this.loggedInText(username).isVisible({ timeout: 5000 })
+            const exactMatch = await this.loggedInText(username).isVisible()
                 .catch(() => false);
             
             if (exactMatch) {
@@ -32,7 +32,7 @@ export class HomePage {
             
             // If exact match fails, check for generic "Logged in as" text
             console.log(`Couldn't find exact username match. Checking for generic "Logged in as" text...`);
-            await expect(this.loggedInTextGeneric).toBeVisible({ timeout: 15000 });
+            await expect(this.loggedInTextGeneric).toBeVisible();
             
             // If we get here, we found "Logged in as" text
             console.log('Login verified with generic "Logged in as" text');
@@ -52,7 +52,7 @@ export class HomePage {
     async deleteAccount() {
         try {
             // Wait for the delete account button to be visible before clicking
-            await this.deleteAccountButton.waitFor({ state: 'visible', timeout: 10000 });
+            await this.deleteAccountButton.waitFor({ state: 'visible' });
             await this.deleteAccountButton.click({ force: true });
         } catch (error) {
             console.log('Delete Account button not clickable or page is closed:', error.message);

@@ -16,7 +16,7 @@ export class CartPage {
         try {
             // Increase timeout and add wait to ensure page is fully loaded
             await this.page.waitForLoadState('networkidle');
-            await expect(this.cartItems).toHaveCount(2, { timeout: 10000 });
+            await expect(this.cartItems).toHaveCount(2);
         } catch (error) {
             console.log('Expected 2 products in cart but found:', await this.cartItems.count());
             
@@ -73,7 +73,7 @@ export class CartPage {
             
             // Locate the quantity column in the cart
             const quantityElement = this.page.locator('tr.cart_menu td:nth-child(4)');
-            await expect(quantityElement).toHaveText('Quantity', { timeout: 10000 });
+            await expect(quantityElement).toHaveText('Quantity');
             
             // Find the actual quantity value of the product
             const actualQuantity = await this.page.locator('tr:has(.cart_description) .cart_quantity').textContent();
@@ -95,7 +95,7 @@ export class CartPage {
             
             // Locate the quantity column in the cart
             const quantityElement = this.page.locator('tr.cart_menu td:nth-child(4)');
-            await expect(quantityElement).toHaveText('Quantity', { timeout: 10000 });
+            await expect(quantityElement).toHaveText('Quantity');
             
             // Find the actual quantity value of the product
             const actualQuantity = await this.page.locator('tr:has(.cart_description) .cart_quantity button').first().textContent();
@@ -122,7 +122,7 @@ export class CartPage {
         await this.removeProductButtons.nth(index).click({force: true});
         
         // Wait for the product to be removed
-        await this.page.waitForTimeout(1000);
+        await this.page.waitForLoadState('domcontentloaded');
     }
     
     async verifyProductRemoved(index = 0) {
@@ -147,12 +147,11 @@ export class CartPage {
      */
     async getProductNamesInCart() {
         // Wait for cart page to fully load
-        await this.page.waitForLoadState('networkidle', { timeout: 15000 });
+        await this.page.waitForLoadState('networkidle');
         
         // Wait for cart items to be visible if any exist
         await this.page.waitForSelector('.cart_info', { 
-            state: 'visible', 
-            timeout: 10000 
+            state: 'visible'
         }).catch(() => console.log('Cart table not found, may be empty'));
         
         // Get cart items count

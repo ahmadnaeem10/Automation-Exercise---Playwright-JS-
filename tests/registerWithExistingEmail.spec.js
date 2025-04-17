@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { SignupPage } from '../pages/SignupPage';
 import env from '../utils/env';
 
@@ -11,7 +11,7 @@ test.describe('Test Case 5: Register User with Existing Email', () => {
     await page.goto('/');
 
     // Step 3: Verify that home page is visible successfully
-    await expect(page.locator('img[alt="Website for automation practice"]')).toBeVisible();
+    await page.waitForSelector('img[alt="Website for automation practice"]', { state: 'visible' });
 
     // Step 4: Click on 'Signup / Login' button
     await page.getByRole('link', { name: ' Signup / Login' }).click();
@@ -26,8 +26,7 @@ test.describe('Test Case 5: Register User with Existing Email', () => {
     await signupPage.clickSignupButton();
 
     // Step 8: Verify error 'Email Address already exist!' is visible
-    const errorMessage = page.getByText('Email Address already exist!');
-    await expect(errorMessage).toBeVisible();
+    await page.waitForSelector('p:has-text("Email Address already exist!")', { state: 'visible' });
   });
 
 });

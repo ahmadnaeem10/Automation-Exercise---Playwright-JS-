@@ -33,16 +33,16 @@ export class ContactPage {
 
     async submitFormAndAcceptAlert() {
         await this.page.waitForLoadState('load');
-        const promise = this.page.waitForEvent('dialog', { timeout: 5000 }).then(dialog => dialog.accept()).catch(() => {});
+        const promise = this.page.waitForEvent('dialog').then(dialog => dialog.accept()).catch(() => {});
         await this.submitButton.click();
         await promise;
         // Wait until success message is visible before asserting
-        await this.page.waitForSelector('div.status.alert.alert-success', { state: 'visible', timeout: 10000 });
+        await this.page.waitForSelector('div.status.alert.alert-success', { state: 'visible' });
     }
 
     async verifySuccessMessage() {
-        await expect(this.successMessage).toBeVisible({ timeout: 10000 });
-        await expect(this.successMessage).toHaveText('Success! Your details have been submitted successfully.', { timeout: 10000 });
+        await expect(this.successMessage).toBeVisible();
+        await expect(this.successMessage).toHaveText('Success! Your details have been submitted successfully.');
     }
 
     async clickHomeButton() {

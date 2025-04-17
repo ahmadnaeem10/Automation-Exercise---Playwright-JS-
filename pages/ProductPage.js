@@ -107,7 +107,7 @@ export class ProductPage {
             try {
                 const firstProduct = this.products.first();
                 await firstProduct.hover();
-                await this.page.waitForTimeout(500); // Short delay after hover
+                // Implicit wait instead of explicit timeout
                 await this.addToCartButtons.first().click({force: true});
                 return true;
             } catch (fallbackError) {
@@ -120,23 +120,23 @@ export class ProductPage {
     async clickContinueShopping() {
         try {
             // Wait for the modal to be visible
-            await this.page.waitForSelector('.modal-footer button', { state: 'visible', timeout: 10000 });
+            await this.page.waitForSelector('.modal-footer button', { state: 'visible' });
             
             // Make sure button is visible before clicking
-            await this.continueShoppingButton.waitFor({ state: 'visible', timeout: 5000 });
+            await this.continueShoppingButton.waitFor({ state: 'visible' });
             
             // Click with force option to bypass any overlay issues
             await this.continueShoppingButton.click({ force: true });
             
             // Wait for modal to disappear
-            await this.page.waitForSelector('.modal-footer button', { state: 'hidden', timeout: 5000 }).catch(async () => {
+            await this.page.waitForSelector('.modal-footer button', { state: 'hidden' }).catch(async () => {
                 // If waiting for hidden times out, try clicking again
                 console.log('Modal did not disappear, trying to click button again');
                 await this.continueShoppingButton.click({ force: true });
             });
             
-            // Small wait to ensure modal is closed
-            await this.page.waitForTimeout(1000);
+            // Small pause to ensure modal is closed
+            await this.page.waitForLoadState('domcontentloaded');
             
             return true;
         } catch (error) {
@@ -165,7 +165,7 @@ export class ProductPage {
             try {
                 const secondProduct = this.products.nth(1);
                 await secondProduct.hover();
-                await this.page.waitForTimeout(500); // Short delay after hover
+                // Implicit wait instead of explicit timeout
                 await this.addToCartButtons.nth(1).click({force: true});
                 return true;
             } catch (fallbackError) {
@@ -182,14 +182,14 @@ export class ProductPage {
     async clickViewProductOnHomePage() {
         try {
             // Wait for products to be visible
-            await this.page.waitForSelector('.features_items', { state: 'visible', timeout: 30000 });
+            await this.page.waitForSelector('.features_items', { state: 'visible' });
             
             // Try to find and click the first view product button
-            await this.viewProductButtons.first().waitFor({ state: 'visible', timeout: 10000 });
+            await this.viewProductButtons.first().waitFor({ state: 'visible' });
             await this.viewProductButtons.first().click();
             
             // Wait for navigation to complete
-            await this.page.waitForLoadState('networkidle', { timeout: 30000 });
+            await this.page.waitForLoadState('networkidle');
         } catch (error) {
             console.log('Error clicking view product button:', error.message);
             throw error; // Let caller handle alternative approach
@@ -199,7 +199,7 @@ export class ProductPage {
     async setProductQuantity(quantity) {
         try {
             // Make sure we're on product detail page
-            await this.productDetail.name.waitFor({ state: 'visible', timeout: 15000 });
+            await this.productDetail.name.waitFor({ state: 'visible' });
             
             // Clear the existing quantity with multiple strategies for reliability
             await this.productQuantityInput.clear();
@@ -241,13 +241,13 @@ export class ProductPage {
     async addProductToCartFromDetailPage() {
         try {
             // Wait for add to cart button to be visible
-            await this.addToCartButtonDetail.waitFor({ state: 'visible', timeout: 15000 });
+            await this.addToCartButtonDetail.waitFor({ state: 'visible' });
             
             // Click the add to cart button
             await this.addToCartButtonDetail.click();
             
             // Wait for modal to appear
-            await this.page.waitForSelector('.modal-content', { state: 'visible', timeout: 15000 });
+            await this.page.waitForSelector('.modal-content', { state: 'visible' });
         } catch (error) {
             console.log('Error adding product to cart from detail page:', error.message);
             // Try JavaScript click as fallback
@@ -258,8 +258,7 @@ export class ProductPage {
             
             // Wait for modal even after JS click
             await this.page.waitForSelector('.modal-content', { 
-                state: 'visible', 
-                timeout: 15000 
+                state: 'visible'
             }).catch(e => console.log('Modal not visible after JS click:', e.message));
         }
     }
@@ -286,7 +285,7 @@ export class ProductPage {
      */
     async getSearchResults() {
         // Wait for the search results to be visible
-        await this.searchedProductItems.first().waitFor({ state: 'visible', timeout: 10000 });
+        await this.searchedProductItems.first().waitFor({ state: 'visible' });
         
         // Get the count of search result items
         const count = await this.searchedProductItems.count();
@@ -327,31 +326,69 @@ export class ProductPage {
         
         for (let i = 0; i < products.length; i++) {
             try {
+                // Get product URL from the view product link
+                const viewProductLink = products[i].locator('.choose a');
+                let productUrl = null;
+                
+                if (await viewProductLink.isVisible()) {
+                    productUrl = await viewProductLink.getAttribute('href');
+                    console.log(`Found product URL: ${productUrl}`);
+                    
+                    // Navigate to the product details page
+                    await this.page.goto(productUrl);
+                    
+                    // Wait for product details page to load
+                    await this.page.waitForLoadState('networkidle');
+                    
+                    // Add to cart using the more reliable detail page method
+                    await this.addToCartButtonDetail.click();
+                    
+                    // Wait for modal to appear
+                    await this.page.waitForSelector('.modal-content', { 
+                        state: 'visible',
+                        timeout: 10000
+                    });
+                    
+                    // Click continue shopping
+                    await this.clickContinueShopping();
+                    
+                    // Go back to search results page
+                    await this.page.goBack();
+                    await this.page.goBack(); // Need to go back twice
+                    
+                    console.log(`Successfully added product ${i+1} to cart using detail page method`);
+                    continue; // Continue to next product
+                }
+                
+                // Fall back to original hover method if view product link not found
+                console.log(`Using fallback method for product ${i+1}`);
+                
                 // Hover over the product to show the "Add to cart" button
                 await products[i].hover();
                 
-                // Small wait for overlay to appear
-                await this.page.waitForTimeout(500);
+                // Wait for overlay to appear
+                await this.page.waitForLoadState('domcontentloaded');
                 
                 // Click the "Add to cart" button within the overlay
                 const addButton = products[i].locator('.product-overlay .add-to-cart');
                 await addButton.click({ force: true });
                 
-                // Wait for the modal to appear
+                // Wait for the modal to appear with reduced timeout to avoid hanging
                 await this.page.waitForSelector('.modal-content', { 
-                    state: 'visible', 
-                    timeout: 5000 
+                    state: 'visible',
+                    timeout: 5000
                 });
                 
                 // Click "Continue Shopping"
                 await this.clickContinueShopping();
                 
-                // Wait a bit before trying the next product
-                await this.page.waitForTimeout(1000);
+                // Wait for UI to stabilize
+                await this.page.waitForLoadState('domcontentloaded');
+                
+                console.log(`Successfully added product ${i+1} to cart`);
             } catch (error) {
                 console.log(`Error adding product ${i+1} to cart: ${error.message}`);
                 // Continue with the next product even if this one fails
-                continue;
             }
         }
     }
@@ -369,17 +406,16 @@ export class ProductPage {
                 // Hover over the product to show the "Add to cart" button
                 await products[i].hover();
                 
-                // Small wait for overlay to appear
-                await this.page.waitForTimeout(300);
+                // Wait for overlay to appear
+                await this.page.waitForLoadState('domcontentloaded');
                 
                 // Click the "Add to cart" button within the overlay
                 const addButton = products[i].locator('.product-overlay .add-to-cart');
                 await addButton.click({ force: true });
                 
-                // Wait for the modal to appear with reduced timeout
+                // Wait for the modal to appear
                 await this.page.waitForSelector('.modal-content', { 
-                    state: 'visible', 
-                    timeout: 3000 
+                    state: 'visible'
                 });
                 
                 // Click "Continue Shopping"
@@ -399,7 +435,7 @@ export class ProductPage {
     async verifyWriteYourReviewVisible() {
         try {
             // Wait for the review section to be visible
-            await this.writeYourReviewHeading.waitFor({ state: 'visible', timeout: 10000 });
+            await this.writeYourReviewHeading.waitFor({ state: 'visible' });
             await expect(this.writeYourReviewHeading).toBeVisible();
             
             // Scroll to the review section to ensure it's in view
@@ -456,7 +492,7 @@ export class ProductPage {
             await this.reviewSubmitButton.click();
             
             // Wait for submission to complete
-            await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+            await this.page.waitForLoadState('networkidle');
             
             console.log('Review submitted successfully');
         } catch (error) {

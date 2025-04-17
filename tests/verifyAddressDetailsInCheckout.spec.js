@@ -19,7 +19,7 @@ test('Test Case 23: Verify address details in checkout page', async ({ page }) =
     const uniqueEmail = env.generateUniqueEmail();
 
     // Step 1 & 2: Launch browser and navigate to url
-    await page.goto('/', { waitUntil: 'networkidle', timeout: 45000 });
+    await page.goto('/', { waitUntil: 'networkidle' });
     
     // Step 3: Verify that home page is visible successfully
     await homePage.verifyHomePage();

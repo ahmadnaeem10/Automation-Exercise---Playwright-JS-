@@ -1,10 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ProductPage } from '../pages/ProductPage';
 
-//test.setTimeout(60000); // Increased timeout to 60s
-
-
-
 test('Test Case 8: Verify All Products and product detail page', async ({ page }) => {
     test.slow(); 
     const productPage = new ProductPage(page); 

@@ -16,17 +16,17 @@ test('Test Case 18: View Category Products', async ({ page }) => {
     await categoriesPage.clickWomenCategory();
     
     // Step 5: Click on any category link under 'Women' category (Dress)
-    await categoriesPage.clickWomenDressSubcategory();
+    await categoriesPage.clickWomenSubcategoryDress();
     
     // Step 6: Verify that category page is displayed with correct title
-    // Note: Using verifyCategoryPageDisplayed instead of specific method to be more flexible
-    // about the actual text on the page
-    await categoriesPage.verifyCategoryPageDisplayed();
+    // Fix: Using the correct text as displayed on the website "Women -  Dress Products"
+    await categoriesPage.verifyCategoryPage('Women -  Dress Products');
     
     // Step 7: On left side bar, click on any sub-category link of 'Men' category
     await categoriesPage.clickMenCategory();
-    await categoriesPage.clickMenTshirtsSubcategory();
+    await categoriesPage.clickMenSubcategoryTshirts();
     
     // Step 8: Verify that user is navigated to that category page
-    await categoriesPage.verifyCategoryPageDisplayed();
+    // Fix: Using the correct text as displayed on the website "Men -  Tshirts Products"
+    await categoriesPage.verifyCategoryPage('Men -  Tshirts Products');
 });
