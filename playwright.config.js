@@ -28,7 +28,7 @@ module.exports = defineConfig({
   /* Shared settings for all the projects below. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'https://automationexercise.com',
+    baseURL: process.env.BASE_URL || 'https://automationexercise.com',
     
     /* Collect trace and screenshots only when a test fails. */
     trace: 'on-first-retry',

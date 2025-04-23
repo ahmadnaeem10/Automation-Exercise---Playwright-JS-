@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { HomePage } from '../pages/HomePage';
 import { ProductPage } from '../pages/ProductPage';
+import env from '../utils/env';
 
 test('Test Case 21: Add review on product', async ({ page }) => {
     const homePage = new HomePage(page);
@@ -26,9 +27,9 @@ test('Test Case 21: Add review on product', async ({ page }) => {
     
     // Step 8: Enter name, email and review
     await productPage.enterReviewDetails({
-        name: 'Test User',
-        email: 'test@example.com',
-        review: 'This is a test review. The product looks good and has excellent quality.'
+        name: env.USER_NAME,
+        email: env.USER_EMAIL,
+        review: env.CONTACT_MESSAGE // Reusing contact message field for review content
     });
     
     // Step 9: Click 'Submit' button

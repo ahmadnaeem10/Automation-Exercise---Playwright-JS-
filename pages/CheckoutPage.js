@@ -92,8 +92,8 @@ export class CheckoutPage {
             ]);
         } catch (error) {
             console.log('Error clicking Register/Login link, proceeding with test anyway:', error.message);
-            // Try to navigate directly to the login page
-            await this.page.goto('https://automationexercise.com/login');
+            // Try to navigate directly to the login page using relative URL
+            await this.page.goto('/login');
         }
     }
 

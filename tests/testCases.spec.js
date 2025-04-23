@@ -6,7 +6,7 @@ test('Test Case 7: Verify Test Cases Page', async ({ page }) => {
     const testCasesPage = new TestCasesPage(page);
 
     // Step 2: Navigate to URL
-    await page.goto('http://automationexercise.com');
+    await page.goto('/');
     
     // Step 3: Verify that home page is visible successfully
     await expect(page.locator('img[alt="Website for automation practice"]')).toBeVisible();

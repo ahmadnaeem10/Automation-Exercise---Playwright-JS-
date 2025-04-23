@@ -19,7 +19,7 @@ export class TestCasesPage {
     }
 
     async verifyTestCasesPageNavigation() {
-        // Verifying the URL to ensure correct navigation
-        await expect(this.page).toHaveURL('https://automationexercise.com/test_cases');
+        // Verifying the URL to ensure correct navigation using relative path
+        await expect(this.page).toHaveURL(/.*\/test_cases/);
     }
 }

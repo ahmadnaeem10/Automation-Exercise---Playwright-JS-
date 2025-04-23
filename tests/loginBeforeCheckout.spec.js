@@ -6,6 +6,7 @@ import { CheckoutPage } from '../pages/CheckoutPage';
 import { LoginPage } from '../pages/LoginPage';
 import { AccountPage } from '../pages/AccountPage';
 import { SignupPage } from '../pages/SignupPage';
+import env from '../utils/env';
 
 test('Test Case 16: Place Order: Login before Checkout', async ({ page }) => {
     const homePage = new HomePage(page);
@@ -16,10 +17,10 @@ test('Test Case 16: Place Order: Login before Checkout', async ({ page }) => {
     const accountPage = new AccountPage(page);
     const signupPage = new SignupPage(page);
 
-    // Generate unique email for registration
-    const uniqueEmail = `test_user_${Date.now()}@example.com`;
-    const username = 'TestUser';
-    const password = 'password123';
+    // Generate unique email for registration using the utility function
+    const uniqueEmail = env.generateUniqueEmail();
+    const username = env.USER_NAME;
+    const password = env.USER_PASSWORD;
 
     // First register a new user to ensure we have valid login credentials
     await page.goto('/', { waitUntil: 'networkidle' });
@@ -34,22 +35,22 @@ test('Test Case 16: Place Order: Login before Checkout', async ({ page }) => {
     // Fill account information
     await signupPage.fillAccountDetails({
         password: password,
-        day: '1',
-        month: '1',
-        year: '2000'
+        day: env.BIRTH_DAY,
+        month: env.BIRTH_MONTH,
+        year: env.BIRTH_YEAR
     });
     
     // Fill address information
     await signupPage.fillAddressDetails({
-        firstName: 'Test',
-        lastName: 'User',
-        company: 'Test Company',
-        address: '123 Test Street',
-        address2: 'Apt 456',
-        state: 'Test State',
-        city: 'Test City',
-        zipcode: '12345',
-        mobileNumber: '1234567890'
+        firstName: env.FIRST_NAME,
+        lastName: env.LAST_NAME,
+        company: env.COMPANY,
+        address: env.ADDRESS1,
+        address2: env.ADDRESS2,
+        state: env.STATE,
+        city: env.CITY,
+        zipcode: env.ZIPCODE,
+        mobileNumber: env.MOBILE_NUMBER
     });
     
     await signupPage.clickCreateAccount();
@@ -112,15 +113,15 @@ test('Test Case 16: Place Order: Login before Checkout', async ({ page }) => {
     await checkoutPage.verifyAddressAndOrderDetails();
     
     // Step 12: Enter description in comment text area and click 'Place Order'
-    await checkoutPage.enterCommentAndPlaceOrder('This is a test order placed after login.');
+    await checkoutPage.enterCommentAndPlaceOrder(env.ORDER_COMMENT);
     
     // Step 13 & 14: Enter payment details and click 'Pay and Confirm Order'
     await checkoutPage.fillPaymentDetails({
-        nameOnCard: 'Test User',
-        cardNumber: '4242424242424242',
-        cvc: '123',
-        expiryMonth: '12',
-        expiryYear: '2025'
+        nameOnCard: env.CARD_NAME,
+        cardNumber: env.CARD_NUMBER,
+        cvc: env.CARD_CVC,
+        expiryMonth: env.CARD_EXPIRY_MONTH,
+        expiryYear: env.CARD_EXPIRY_YEAR
     });
     await checkoutPage.clickPayAndConfirmOrder();
     

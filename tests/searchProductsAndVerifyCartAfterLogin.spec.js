@@ -3,6 +3,8 @@ import { HomePage } from '../pages/HomePage';
 import { ProductPage } from '../pages/ProductPage';
 import { CartPage } from '../pages/CartPage';
 import { LoginPage } from '../pages/LoginPage';
+import { SignupPage } from '../pages/SignupPage';
+import { AccountPage } from '../pages/AccountPage';
 import env from '../utils/env';
 
 test('Test Case 20: Search Products and Verify Cart After Login', async ({ page }) => {
@@ -10,7 +12,52 @@ test('Test Case 20: Search Products and Verify Cart After Login', async ({ page 
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
     const loginPage = new LoginPage(page);
+    const signupPage = new SignupPage(page);
+    const accountPage = new AccountPage(page);
     
+    // First, create a new account to ensure we have valid credentials
+    // Generate a unique email for registration
+    const uniqueEmail = env.generateUniqueEmail();
+    const username = env.USER_NAME;
+    const password = env.USER_PASSWORD;
+    
+    // Register a new user
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await homePage.clickSignupLogin();
+    await signupPage.verifySignupPage();
+    await signupPage.enterUserDetails(username, uniqueEmail);
+    await signupPage.clickSignupButton();
+    
+    // Fill account information
+    await signupPage.fillAccountDetails({
+        password: password,
+        day: env.BIRTH_DAY,
+        month: env.BIRTH_MONTH,
+        year: env.BIRTH_YEAR
+    });
+    
+    // Fill address information
+    await signupPage.fillAddressDetails({
+        firstName: env.FIRST_NAME,
+        lastName: env.LAST_NAME,
+        company: env.COMPANY,
+        address: env.ADDRESS1,
+        address2: env.ADDRESS2,
+        state: env.STATE,
+        city: env.CITY,
+        zipcode: env.ZIPCODE,
+        mobileNumber: env.MOBILE_NUMBER
+    });
+    
+    await signupPage.clickCreateAccount();
+    await accountPage.verifyAccountCreated();
+    await accountPage.clickContinue();
+    
+    // Verify user is logged in and then log out
+    await homePage.verifyLoggedIn(username);
+    await homePage.clickLogout();
+    
+    // Now start the actual test
     // Step 1 & 2: Launch browser and navigate to url
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     
@@ -21,8 +68,8 @@ test('Test Case 20: Search Products and Verify Cart After Login', async ({ page 
     await productPage.verifyProductsPageVisible();
     
     // Step 5: Enter product name in search input and click search button
-    // Use a search term that will return fewer products for faster processing
-    const searchTerm = 'Blue Top';
+    // Use search term from env variables
+    const searchTerm = env.SEARCH_PRODUCT;
     await productPage.searchForProduct(searchTerm);
     
     // Step 6: Verify 'SEARCHED PRODUCTS' is visible
@@ -72,12 +119,10 @@ test('Test Case 20: Search Products and Verify Cart After Login', async ({ page 
     await homePage.clickSignupLogin();
     await loginPage.verifyLoginPage();
     
-    // Use the credentials provided by the user
-    const email = "rsy@gmail.com";
-    const password = "rsyrsyrsy";
-    console.log(`Attempting to login with email: ${email}`);
+    // Use the credentials from the user we just created
+    console.log(`Attempting to login with email: ${uniqueEmail}`);
     
-    await loginPage.enterLoginCredentials(email, password);
+    await loginPage.enterLoginCredentials(uniqueEmail, password);
     await loginPage.clickLoginButton();
     
     // Properly verify login without try/catch to ensure the test fails if login doesn't work
@@ -113,4 +158,8 @@ test('Test Case 20: Search Products and Verify Cart After Login', async ({ page 
         // If cart was empty before login, just log it
         console.log('Cart was empty before login, skipping product comparison');
     }
+    
+    // Clean up - delete the account we created
+    await homePage.deleteAccount();
+    await accountPage.verifyAccountDeleted();
 });

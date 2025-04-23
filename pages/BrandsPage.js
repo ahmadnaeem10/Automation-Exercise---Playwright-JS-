@@ -64,8 +64,8 @@ export class BrandsPage {
     
     async verifyBrandPage(brandName) {
         // Verify the URL contains the brand_products parameter with the brand name
-        // Updated to match the actual URL format: brand_products/BrandName
-        await expect(this.page).toHaveURL(`https://automationexercise.com/brand_products/${brandName}`);
+        // Updated to use relative URL instead of hardcoded absolute URL
+        await expect(this.page).toHaveURL(new RegExp(`/brand_products/${brandName}`, 'i'));
         
         // Verify the title contains the brand name
         await expect(this.brandProductsTitle).toContainText(brandName, { ignoreCase: true });

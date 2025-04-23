@@ -6,6 +6,7 @@ import { LoginPage } from '../pages/LoginPage';
 import { SignupPage } from '../pages/SignupPage';
 import { AccountPage } from '../pages/AccountPage';
 import { CheckoutPage } from '../pages/CheckoutPage';
+import env from '../utils/env';
 
 // Test Case 24: Download Invoice after purchase order
 test('Download Invoice after purchase order', async ({ page }) => {
@@ -19,7 +20,7 @@ test('Download Invoice after purchase order', async ({ page }) => {
     const checkoutPage = new CheckoutPage(page);
 
     // 1. Launch browser
-    // 2. Navigate to url 'http://automationexercise.com'
+    // 2. Navigate to base URL
     await homePage.goto();
 
     // 3. Verify that home page is visible successfully
@@ -48,9 +49,9 @@ test('Download Invoice after purchase order', async ({ page }) => {
     console.log('Clicked on Register / Login');
 
     // 9. Fill all details in Signup and create account
-    // Generate a unique email
-    const uniqueEmail = `testuser_${Date.now()}@example.com`;
-    const username = `testuser_${Date.now()}`;
+    // Generate a unique email using the utility function
+    const uniqueEmail = env.generateUniqueEmail();
+    const username = env.USER_NAME;
     
     // Fill signup details
     await signupPage.enterUserDetails(username, uniqueEmail);
@@ -59,24 +60,24 @@ test('Download Invoice after purchase order', async ({ page }) => {
 
     // Fill account information
     await signupPage.fillAccountDetails({
-        password: 'Test@123',
-        day: '1',
-        month: 'January',
-        year: '1990'
+        password: env.USER_PASSWORD,
+        day: env.BIRTH_DAY,
+        month: env.BIRTH_MONTH,
+        year: env.BIRTH_YEAR
     });
     console.log('Filled account information');
 
     // Fill address information
     const addressDetails = {
-        firstName: 'Test',
-        lastName: 'User',
-        company: 'Test Company',
-        address: '123 Test Street',
-        address2: 'Apt 456',
-        state: 'Test State',
-        city: 'Test City',
-        zipcode: '12345',
-        mobileNumber: '1234567890'
+        firstName: env.FIRST_NAME,
+        lastName: env.LAST_NAME,
+        company: env.COMPANY,
+        address: env.ADDRESS1,
+        address2: env.ADDRESS2,
+        state: env.STATE,
+        city: env.CITY,
+        zipcode: env.ZIPCODE,
+        mobileNumber: env.MOBILE_NUMBER
     };
     await signupPage.fillAddressDetails(addressDetails);
     await signupPage.clickCreateAccount();
@@ -106,16 +107,16 @@ test('Download Invoice after purchase order', async ({ page }) => {
     console.log('Verified address details and order review');
 
     // 15. Enter description in comment text area and click 'Place Order'
-    await checkoutPage.enterCommentAndPlaceOrder('This is a test order for downloading invoice');
+    await checkoutPage.enterCommentAndPlaceOrder(env.ORDER_COMMENT);
     console.log('Entered comment and placed order');
 
     // 16. Enter payment details: Name on Card, Card Number, CVC, Expiration date
     await checkoutPage.fillPaymentDetails({
-        nameOnCard: 'Test User',
-        cardNumber: '4111111111111111',
-        cvc: '123',
-        expiryMonth: '12',
-        expiryYear: '2025'
+        nameOnCard: env.CARD_NAME,
+        cardNumber: env.CARD_NUMBER,
+        cvc: env.CARD_CVC,
+        expiryMonth: env.CARD_EXPIRY_MONTH,
+        expiryYear: env.CARD_EXPIRY_YEAR
     });
     console.log('Filled payment details');
 

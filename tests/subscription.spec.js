@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { SubscriptionPage } from '../pages/SubscriptionPage';
+import env from '../utils/env';
 
 test('Test Case 10: Verify Subscription in home page', async ({ page }) => {
     const subscriptionPage = new SubscriptionPage(page);
@@ -17,7 +18,8 @@ test('Test Case 10: Verify Subscription in home page', async ({ page }) => {
     await subscriptionPage.verifySubscriptionTextVisible();
 
     // Step 6: Enter email and click subscribe
-    await subscriptionPage.enterEmailAndSubscribe('testemail@example.com');
+    // Using environment variable for email address
+    await subscriptionPage.enterEmailAndSubscribe(env.USER_EMAIL);
 
     // Step 7: Verify success message
     await subscriptionPage.verifySuccessMessageVisible();
